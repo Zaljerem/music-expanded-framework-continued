@@ -1,3 +1,4 @@
+using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,13 +20,41 @@ namespace MusicExpanded
         private static float ThemeSelectionHeight = 180f;
         private static float ThemeSelectorHeight =>
             DefDatabase<ThemeDef>.AllDefsListForReading.Count() * ThemeSelectionHeight;
-        public ThemeDef SoundTheme => DefDatabase<ThemeDef>.GetNamedSilentFail(selectedSoundTheme);
+        //public ThemeDef SoundTheme => DefDatabase<ThemeDef>.GetNamedSilentFail(selectedSoundTheme);
+
+        public ThemeDef SoundTheme
+        {
+            get
+            {
+                // Retrieve the theme using GetNamedSilentFail
+                var theme = DefDatabase<ThemeDef>.GetNamedSilentFail(selectedSoundTheme);
+
+                // Check if the retrieval failed
+                if (theme == null)
+                {
+                    // Log detailed information for debugging
+                    Log.Warning($"[MusicExpanded]: Selected sound theme '{selectedSoundTheme}' was not found in DefDatabase<ThemeDef>. " +
+                                $"Available themes: {string.Join(", ", DefDatabase<ThemeDef>.AllDefsListForReading.Select(def => def.defName))}");
+
+                    // Fall back to default theme
+                    selectedSoundTheme = "ME_Vanilla";
+                    theme = DefDatabase<ThemeDef>.GetNamed(selectedSoundTheme);
+
+                    // Log fallback for clarity
+                    Log.Warning($"[MusicExpanded]: Falling back to default theme 'ME_Vanilla'.");
+                }
+
+                return theme;
+            }
+        }
         public override void ExposeData()
         {
             Scribe_Values.Look(ref showNowPlaying, "showNowPlaying", true);
             Scribe_Values.Look(ref vanillaMusicUpdate, "vanillaMusicUpdate", false);
             Scribe_Values.Look(ref selectedSoundTheme, "selectedSoundTheme", "ME_Vanilla");
             Scribe_Collections.Look(ref enabledThemes, "enabledThemes", LookMode.Value, LookMode.Value);
+            base.ExposeData();
+            
         }
         public void Build(Rect container)
         {
@@ -46,10 +75,25 @@ namespace MusicExpanded
         {
             Listing_Standard listing = new Listing_Standard();
             listing.Begin(container);
-            if (listing.ButtonTextLabeled("ME_SelectSounds".Translate(), SoundTheme.label, tooltip: "ME_SelectSoundsDescription".Translate()))
+
+            // Show the current selected sound theme
+            if (listing.ButtonTextLabeled("ME_SelectSounds".Translate(), SoundTheme?.label ?? "None", tooltip: "ME_SelectSoundsDescription".Translate()))
             {
                 List<FloatMenuOption> list = new List<FloatMenuOption>();
-                foreach (ThemeDef theme in DefDatabase<ThemeDef>.AllDefsListForReading)
+
+                // Add "ME_Vanilla" as a fallback option
+                ThemeDef vanillaTheme = DefDatabase<ThemeDef>.GetNamedSilentFail("ME_Vanilla");
+                if (vanillaTheme != null)
+                {
+                    list.Add(new FloatMenuOption(vanillaTheme.label, delegate
+                    {
+                        selectedSoundTheme = vanillaTheme.defName;
+                        SoundManager.ActivateSounds(vanillaTheme);
+                    }));
+                }
+
+                // Iterate through other ThemeDefs with sounds
+                foreach (ThemeDef theme in DefDatabase<ThemeDef>.AllDefsListForReading.Where(t => t.defName != "ME_Vanilla" && t.sounds != null && t.sounds.Any()))
                 {
                     list.Add(new FloatMenuOption(theme.label, delegate
                     {
@@ -57,10 +101,24 @@ namespace MusicExpanded
                         SoundManager.ActivateSounds(theme);
                     }));
                 }
-                Find.WindowStack.Add(new FloatMenu(list));
+
+                // Add a FloatMenu with the options
+                if (list.Count > 0)
+                {
+                    Find.WindowStack.Add(new FloatMenu(list));
+                }
+                else
+                {
+                    // If no valid themes, reset to "ME_Vanilla"
+                    selectedSoundTheme = "ME_Vanilla";
+                    Messages.Message("ME_NoValidSoundThemes".Translate(), MessageTypeDefOf.RejectInput, false);
+                }
             }
+
             listing.End();
         }
+
+
 
         private void BuildNowPlaying(Rect container)
         {
