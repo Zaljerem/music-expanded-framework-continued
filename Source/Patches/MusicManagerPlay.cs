@@ -51,8 +51,7 @@ namespace MusicExpanded.Patches
                     TrackDef lastTrackAsTrackDef = TrackManager.TrackByDefName(lastTrack.defName);
                     if (lastTrackAsTrackDef != null && lastTrackAsTrackDef.IsBattleTrack)
                     {
-                        Map map = Find.AnyPlayerHomeMap ?? Find.CurrentMap;
-                        if (map.dangerWatcher.DangerRating == StoryDanger.High)
+                        if(__instance.DangerMusicMode)
                         {
                             Cue battleCue = (Cue)(lastTrackAsTrackDef.cue - 1);
                             if (battleCue != Cue.None)
