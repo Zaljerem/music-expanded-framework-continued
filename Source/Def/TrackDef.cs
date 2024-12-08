@@ -70,6 +70,8 @@ namespace MusicExpanded
             track.allowedTimeOfDay = song.allowedTimeOfDay;
             track.allowedSeasons = song.allowedSeasons;
             track.clip = song.clip;
+            //added
+            track.minRoyalTitle = song.minRoyalTitle;
 
             // Since this track is generated via vanilla SongDef, it feels safe to assume it'll use vanillaLogic.
             track.vanillaLogic = true;
