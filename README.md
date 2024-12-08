@@ -1,6 +1,9 @@
 # Music Expanded Framework
 This mod overhauls how music functions in RimWorld! It ensures there's always a track playing and introduces cues for specific tracks to play.
 
+NOTE: This is the currently-maintained version available for RimWorld 1.5 on Steam at: 
+https://steamcommunity.com/sharedfiles/filedetails/?id=3263001145
+
 # Defs
 
 # Logic
