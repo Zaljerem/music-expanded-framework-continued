@@ -48,11 +48,20 @@ namespace MusicExpanded
             // For each SongDef without a corresponding TrackDef, create a new TrackDef, set its properties, and add it to the vanilla theme's list of tracks
             foreach (SongDef song in songs)
             {
+                // Check if the SongDef has a "minRoyalTitle" node
+                if (song.minRoyalTitle != null)
+                {
+                    Log.Message($"[MusicExpandedFramework]: Note - song '{song.defName}' for vanilla theme requires a royal title ({song.minRoyalTitle}).");
+                    //now added to TrackDef, should be handled by vanilla AppropriateNow
+                    //continue;
+                }
+
                 TrackDef track = TrackDef.FromSong(song);
                 track.defName = "ME_Vanilla_" + song.defName;
                 giveShortHash.Invoke(null, new object[] { track, typeof(TrackDef), trackHashes });
                 vanillaTheme.tracks.Add(track);
             }
+
 
             // Get a set of hash codes for all existing ThemeDefs
             HashSet<ushort> themeHashes = Utilities.GetHashes(typeof(ThemeDef));
